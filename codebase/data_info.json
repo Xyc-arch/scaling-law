@@ -1,0 +1,86 @@
+{
+    "california": {
+      "path": "/home/ubuntu/data/california",
+      "label_col": "MedHouseVal",
+      "seed_size": 100,
+      "batch_size": 16,
+      "epochs": 300,
+      "syn_samples": 10000
+    },
+    "abalone": {
+      "path": "/home/ubuntu/data/abalone",
+      "label_col": "Class_number_of_rings",
+      "seed_size": 100,
+      "batch_size": 16,
+      "epochs": 300,
+      "syn_samples": 10000
+    },
+    "wine": {
+      "path": "/home/ubuntu/data/wine",
+      "label_col": "quality",
+      "seed_size": 100,
+      "batch_size": 16,
+      "epochs": 300,
+      "syn_samples": 10000
+    },
+    "spam": {
+      "path": "/home/ubuntu/data/spam",
+      "label_col": "spam",
+      "spurious_col": "word_freq_will",
+      "seed_size": 200,
+      "batch_size": 16,
+      "spurious_small_is_0": 0,
+      "epochs": 200,
+      "syn_samples": 10000
+    },
+    "diabetes": {
+      "path": "/home/ubuntu/data/diabetes",
+      "label_col": "readmitted",
+      "spurious_col": "gender",
+      "seed_size": 200,
+      "batch_size": 32,
+      "spurious_small_is_0": 0,
+      "epochs": 100,
+      "syn_samples": 50000
+    },
+    "adult": {
+      "path": "/home/ubuntu/data/adult",
+      "label_col": "class",
+      "spurious_col": "sex",
+      "seed_size": 200,
+      "batch_size": 32,
+      "spurious_small_is_0": 0,
+      "epochs": 100,
+      "syn_samples": 50000
+    },
+    "craft": {
+      "path": "/home/ubuntu/data/craft",
+      "label_col": "Target",
+      "spurious_col": "X6",
+      "seed_size": 200,
+      "batch_size": 32,
+      "spurious_small_is_0": 0,
+      "epochs": 100,
+      "syn_samples": 50000
+    },
+    "heart": {
+      "path": "/home/ubuntu/data/heart",
+      "label_col": "DEATH_EVENT",
+      "spurious_col": "sex",
+      "seed_size": 20,
+      "batch_size": 8,
+      "spurious_small_is_0": 1,
+      "epochs": 200
+    },
+    "gender": {
+      "path": "/home/ubuntu/data/gender",
+      "label_col": "gender",
+      "spurious_col": "long_hair",
+      "seed_size": 200,
+      "batch_size": 32,
+      "spurious_small_is_0": 1,
+      "epochs": 100,
+      "syn_samples": 50000
+    }
+  }
+  
