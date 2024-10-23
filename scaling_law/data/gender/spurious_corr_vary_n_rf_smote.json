@@ -1,0 +1,62 @@
+{
+    "0": {
+        "imbalance_base_mean": 0.9557495724398837,
+        "imbalance_base_std": 0.0030570723336534548,
+        "balance_base_mean": 0.9557495724398837,
+        "balance_base_std": 0.0030570723336534548
+    },
+    "1": {
+        "imbalance_base_mean": 0.9607789594200116,
+        "imbalance_base_std": 0.0016321896981939,
+        "balance_base_mean": 0.9609172720064569,
+        "balance_base_std": 0.0020890433739813737
+    },
+    "2": {
+        "imbalance_base_mean": 0.9602507760082775,
+        "imbalance_base_std": 0.0028884526582208564,
+        "balance_base_mean": 0.9615766568176726,
+        "balance_base_std": 0.002384819432955839
+    },
+    "3": {
+        "imbalance_base_mean": 0.957916173328071,
+        "imbalance_base_std": 0.0058340956010893156,
+        "balance_base_mean": 0.9608431378823596,
+        "balance_base_std": 0.002320901763787287
+    },
+    "4": {
+        "imbalance_base_mean": 0.9501342236539412,
+        "imbalance_base_std": 0.007846990220235387,
+        "balance_base_mean": 0.9573111890971282,
+        "balance_base_std": 0.005585295779104252
+    },
+    "5": {
+        "imbalance_base_mean": 0.9435985094952125,
+        "imbalance_base_std": 0.005682313129401247,
+        "balance_base_mean": 0.9555815706478648,
+        "balance_base_std": 0.0037029212488716846
+    },
+    "6": {
+        "imbalance_base_mean": 0.9403152744740388,
+        "imbalance_base_std": 0.008582990906742732,
+        "balance_base_mean": 0.9576269257983198,
+        "balance_base_std": 0.002033609670548133
+    },
+    "7": {
+        "imbalance_base_mean": 0.9277985187397555,
+        "imbalance_base_std": 0.006362780716657389,
+        "balance_base_mean": 0.9529200311469989,
+        "balance_base_std": 0.0061055202626874635
+    },
+    "8": {
+        "imbalance_base_mean": 0.9239718112548758,
+        "imbalance_base_std": 0.005320058080990675,
+        "balance_base_mean": 0.954581204421736,
+        "balance_base_std": 0.005578881759284016
+    },
+    "9": {
+        "imbalance_base_mean": 0.9196211870704399,
+        "imbalance_base_std": 0.0035849705434700934,
+        "balance_base_mean": 0.9549360526512283,
+        "balance_base_std": 0.003132999075886851
+    }
+}
