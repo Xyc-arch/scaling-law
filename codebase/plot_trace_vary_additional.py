@@ -6,11 +6,14 @@ from utils import *
 
 def plot_query_data_multiple(data_name, json_dir, task, classifier, metric):
     
-    metric_names = {"balanced": "Balanced Accuracy", "worst": "Worst Accuracy", "min": "Minority Accuracy"}
+    metric_names = {"balanced": "balanced Accuracy", "worst": "worst accuracy", "min": "minority accuracy", "balanced_log_cross": "balanced log cross entropy loss", "min_log_cross": "minority log cross entropy loss"}
     metric_name = metric_names[metric]
         
     task_names = {"spurious_corr_vary_additional": "spruious corr augment additional", "imbalanced_class_vary_additional": "imbalanced class augment additional"}
     task_name = task_names[task]
+    
+    clf_names = {"xgb": "XGBoost", "rf": "Random Forest"}
+    clf_name = clf_names[classifier]
     
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple', 'pink']
 
@@ -38,21 +41,30 @@ def plot_query_data_multiple(data_name, json_dir, task, classifier, metric):
     means = np.array(means)
     stds = np.array(stds)
 
-    traces = np.arange(0, 4000, 400)
+    traces = np.arange(1, 4001, 400)
+    
+    if metric in ["balanced_log_cross", "min_log_cross"]:
+        traces = np.log(traces)
 
-    plt.errorbar(traces, means, yerr=stds, fmt='-o', color=colors[0], capsize=5, label="augment additional")
+    plt.errorbar(traces, means, yerr=stds, fmt='-o', color=colors[0], capsize=5, label="Augment additional")
+    
+    if metric in ["balanced_log_cross", "min_log_cross"]:
+        x_margin = (traces[-1] - traces[1]) * 0.05
+        plt.xlim(traces[1] - x_margin, traces[-1] + x_margin)
 
     # Plotting the horizontal line for the 10th entry
     if "train_all_augment" in data["10"]:
         plt.axhline(y=data["10"]["train_all_augment"], color='r', linestyle='--', label=f'Train all {data["10"]["train_all_augment"]: .3f}')
 
     # Plotting the horizontal line through the i=0 "balance_augment_mean"
-    plt.axhline(y=means[0], color='g', linestyle=':', label=f'Balanced augment mean at 0, {means[0]:.3f}')
+    plt.axhline(y=means[0], color='g', linestyle=':', label=f'Balanced mean without additional, {means[0]:.3f}')
 
-    plt.xlabel('# additional augmented synthetic samples')
-    plt.ylabel(f'{metric_name}')
-    plt.title(f'Performance for Task: {task_name}, Classifier: {classifier}')
-    plt.legend()
+    plt.xlabel('# additional augmented synthetic samples', fontsize=14)
+    if metric in ["balanced_log_cross", "min_log_cross"]:
+        plt.xlabel('log of # additional augmented synthetic samples')
+    plt.ylabel(f'{metric_name}', fontsize=14)
+    plt.title(f'Performance for Task: {task_name}, Classifier: {clf_name}')
+    plt.legend(fontsize=12)
     plt.grid(True)
     
     output_dir = f"/home/ubuntu/plots/{data_name}"
@@ -67,17 +79,21 @@ if __name__ == "__main__":
     
     tasks = {0: "spurious_corr_vary_additional", 1: "imbalanced_class_vary_additional"}
     
-    metrics = {0: "balanced", 1: "worst", 2: "min"}
+    # metrics = {0: "balanced", 1: "worst", 2: "min"}
     
-    classifier_types = {0: "log", 1: "rf", 2: "xgb"}
+    metrics = {0: "balanced_log_cross", 1: "min_log_cross"}
+    
+    classifier_types = {0: "rf", 1: "xgb"}
     
     for idx_data_name in [0, 1, 2, 3]:
         data_name = data_names[idx_data_name]
         for idx_task in [0, 1]:
             task = tasks[idx_task]
-            for idx_metric in [0, 2]:
+            if data_name == "adult" and task == "spurious_corr_vary_additional":
+                continue
+            for idx_metric in [0, 1]:
                 metric = metrics[idx_metric]
-                for idx_classifier in [0, 1, 2]:
+                for idx_classifier in [0, 1]:
                     classifier = classifier_types[idx_classifier]
         
                     info = load_data_info('data_info.json')

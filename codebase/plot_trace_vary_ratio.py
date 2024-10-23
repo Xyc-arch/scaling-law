@@ -6,11 +6,14 @@ from utils import *
 
 def plot_query_data_multiple(data_name, json_dir, task, classifier, queries, metric):
     
-    metric_names = {"balanced": "Balanced Accuracy", "worst": "Worst Accuracy", "min": "Minority Accuracy"}
+    metric_names = {"balanced": "balanced accuracy", "worst": "worst accuracy", "min": "minority accuracy", "balanced_cross": "balanced cross entropy loss", "min_cross": "minority cross entropy loss"}
     metric_name = metric_names[metric]
         
     task_names = {"spurious_corr_vary_ratio": "spruious corr varying ratio", "imbalanced_class_vary_ratio": "imbalanced class varying ratio"}
     task_name = task_names[task]
+    
+    clf_names = {"xgb": "XGBoost", "rf": "Random Forest"}
+    clf_name = clf_names[classifier]
     
     
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'orange', 'purple', 'pink']
@@ -54,10 +57,12 @@ def plot_query_data_multiple(data_name, json_dir, task, classifier, queries, met
 
         plt.errorbar(traces, means, yerr=stds, fmt='-o', color=colors[idx % len(colors)], capsize=5, label=legend_name)
 
-    plt.xlabel('Maj/Min')
-    plt.ylabel(f'{metric_name}')
-    plt.title(f'Performance for Task: {task_name}, Classifier: {classifier}')
-    plt.legend()
+    plt.xlabel('Maj/Min', fontsize = 14)
+    plt.ylabel(f'{metric_name}', fontsize = 14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.title(f'Performance for Task: {task_name}, Classifier: {clf_name}')
+    plt.legend(fontsize = 12)
     plt.grid(True)
     
     output_dir = f"/home/ubuntu/plots/{data_name}"
@@ -73,22 +78,25 @@ if __name__ == "__main__":
     tasks = {0: "spurious_corr_vary_ratio", 1: "imbalanced_class_vary_ratio"}
     task = tasks[1]
     
-    metrics = {0: "balanced", 1: "worst", 2: "min"}
-    metric = metrics[1]
+    # metrics = {0: "balanced", 1: "worst", 2: "min"}
+    # metric = metrics[1]
+    
+    metrics = {0: "balanced_cross", 1: "min_cross"}
     
     add_data_ls = {0: "synthetic_allseed", 1: "smote", 2: "adasyn", 3: "ros"}
     
-    classifier_types = {0: "log", 1: "rf", 2: "xgb"}
+    classifier_types = {0: "rf", 1: "xgb"}
     
-    classifier = classifier_types[2]
     
     for idx_data_name in [0, 1, 2, 3]:
         data_name = data_names[idx_data_name]
         for idx_task in [0, 1]:
             task = tasks[idx_task]
-            for idx_metric in [0, 2]:
+            if data_name == "adult" and task == "spurious_corr_vary_ratio":
+                continue
+            for idx_metric in [0, 1]:
                 metric = metrics[idx_metric]
-                for idx_classifier in [0, 1, 2]:
+                for idx_classifier in [0, 1]:
                     classifier = classifier_types[idx_classifier]
         
         

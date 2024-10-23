@@ -50,7 +50,7 @@ def feature_target_correlation(data_file, target_name):
 if __name__ == "__main__":
     
     data_names = {0: "craft", 1: "gender", 3: "diabetes", 4: "adult"}
-    data_name = data_names[3]
+    data_name = data_names[4]
     info = load_data_info('data_info.json')
     data_info = info.get(data_name, {})
     seed_size = data_info.get('seed_size')
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     
     data_file = os.path.join(path, f"{data_name}.csv")
     
-    calculate_proportions(data_file, target_name = label_col, spurious_column = 'gender', spurious_small_is_0=1)
+    # calculate_proportions(data_file, target_name = label_col, spurious_column = 'gender', spurious_small_is_0=1)
     
     order_corr = feature_target_correlation(data_file, target_name = label_col)
     print(order_corr)

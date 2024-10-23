@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import os
 import json
-from sklearn.metrics import balanced_accuracy_score, accuracy_score
+from sklearn.metrics import balanced_accuracy_score, accuracy_score, log_loss
+from sklearn.utils.class_weight import compute_class_weight
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from catboost import CatBoostClassifier
@@ -90,29 +91,8 @@ def perform_experiment(parent_path, seed_size, random_seed, classifier_type, tar
             clf = get_classifier(classifier_type, seed)
             clf.fit(X_train_augment, y_train_augment, sample_weight=sample_weights)
 
-            y_pred = clf.predict(test_data.drop(columns=[target_column]))
-
-            if metric == "balanced":
-                ba_score = balanced_accuracy_score(test_data[target_column], y_pred)
-                balance_augment_scores.append(ba_score)
-            elif metric == "worst":
-                group_accuracies = []
-                for group_name, group_data in test_groups.items():
-                    if len(group_data) > 0:
-                        group_pred = clf.predict(group_data.drop(columns=[target_column]))
-                        group_acc = accuracy_score(group_data[target_column], group_pred)
-                        group_accuracies.append(group_acc)
-                    else:
-                        group_accuracies.append(0)
-                balance_augment_scores.append(min(group_accuracies))
-            elif metric == "min":
-                if len(test_groups[1]) > 0:
-                    group_pred = clf.predict(test_groups[1].drop(columns=[target_column]))
-                    group_acc = accuracy_score(test_groups[1][target_column], group_pred)
-                else:
-                    group_acc = 0  
-                balance_augment_scores.append(group_acc)
-
+            balance_augment_scores.append(loss(metric, test_data, test_groups, target_column, clf, "imbalance"))
+            
 
         results[i] = {
             'balance_augment_mean': np.mean(balance_augment_scores),
@@ -126,27 +106,7 @@ def perform_experiment(parent_path, seed_size, random_seed, classifier_type, tar
     clf = get_classifier(classifier_type, seed)
     clf.fit(X_train_all, y_train_all)
 
-    y_pred = clf.predict(test_data.drop(columns=[target_column]))
-
-    if metric == "balanced":
-        train_all_score = balanced_accuracy_score(test_data[target_column], y_pred)
-    elif metric == "worst":
-        group_accuracies = []
-        for group_name, group_data in test_groups.items():
-            if len(group_data) > 0:
-                group_pred = clf.predict(group_data.drop(columns=[target_column]))
-                group_acc = accuracy_score(group_data[target_column], group_pred)
-                group_accuracies.append(group_acc)
-            else:
-                group_accuracies.append(0)
-        train_all_score = min(group_accuracies)
-    elif metric == "min":
-        if len(test_groups[1]) > 0:
-            group_pred = clf.predict(test_groups[1].drop(columns=[target_column]))
-            group_acc = accuracy_score(test_groups[1][target_column], group_pred)
-        else:
-            group_acc = 0  
-        train_all_score = group_acc
+    train_all_score = loss(metric, test_data, test_groups, target_column, clf, "imbalance")
         
     results[i+1] = {
         'train_all_augment': train_all_score
@@ -156,23 +116,6 @@ def perform_experiment(parent_path, seed_size, random_seed, classifier_type, tar
         json.dump(results, f, indent=4)
     
     
-    
-    
-def get_classifier(classifier_type, random_state):
-    if classifier_type == 'log':
-        return LogisticRegression(random_state=random_state, max_iter=1000)
-    elif classifier_type == 'rf':
-        return RandomForestClassifier(random_state=random_state)
-    elif classifier_type == 'cat':
-        return CatBoostClassifier(random_state=random_state, verbose=0)
-    elif classifier_type == 'gb':
-        return GradientBoostingClassifier(random_state=random_state)
-    elif classifier_type == 'xgb':
-        return XGBClassifier(random_state=random_state)
-    else:
-        raise ValueError(f"Unsupported classifier type: {classifier_type}")
-
-
 
 if __name__ == "__main__":
     
@@ -180,18 +123,18 @@ if __name__ == "__main__":
     
     add_data_ls = {0: "synthetic_allseed", 1: "smote", 2: "adasyn", 3: "ros"}
     
-    classifier_types = {0: "log", 1: "rf", 2: "xgb"}
+    classifier_types = {0: "rf", 1: "xgb"}
     
-    metrics = {0: "balanced", 1: "worst", 2: "min"}
+    metrics = {0: "balanced_log_cross", 1: "min_log_cross"}
     
     idx_add_data = 0
     
     
-    for idx_metric in [0, 2]:
+    for idx_metric in [1]:
         metric = metrics[idx_metric]
-        for idx_data_name in [2, 3]:
+        for idx_data_name in [0, 1, 2, 3]:
             data_name = data_names[idx_data_name]
-            for idx_classifier in [0, 1, 2]:
+            for idx_classifier in [0]:
                 add_data = add_data_ls[idx_add_data]
                 classifier_type = classifier_types[idx_classifier]
                 

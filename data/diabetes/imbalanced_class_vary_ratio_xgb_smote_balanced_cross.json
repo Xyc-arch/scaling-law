@@ -1,0 +1,82 @@
+{
+    "0": {
+        "imbalance_base_mean": 1.1099599955918802,
+        "imbalance_base_std": 0.0,
+        "balance_base_mean": 1.1099599955918802,
+        "balance_base_std": 0.0,
+        "balance_augment_mean": 1.1543948191994184,
+        "balance_augment_std": 0.023774957637500826
+    },
+    "1": {
+        "imbalance_base_mean": 1.2076299181842454,
+        "imbalance_base_std": 0.015244317378740577,
+        "balance_base_mean": 1.1909552633501346,
+        "balance_base_std": 0.018223858656639946,
+        "balance_augment_mean": 1.2884841945893057,
+        "balance_augment_std": 0.030531095167853278
+    },
+    "2": {
+        "imbalance_base_mean": 1.4386308062272355,
+        "imbalance_base_std": 0.01368096524136633,
+        "balance_base_mean": 1.3705281431456036,
+        "balance_base_std": 0.022783623278323714,
+        "balance_augment_mean": 1.4681977107741757,
+        "balance_augment_std": 0.009366369607936124
+    },
+    "3": {
+        "imbalance_base_mean": 1.6106031573314195,
+        "imbalance_base_std": 0.02058950204462563,
+        "balance_base_mean": 1.5415710552011943,
+        "balance_base_std": 0.015033719322509829,
+        "balance_augment_mean": 1.613605905194262,
+        "balance_augment_std": 0.019223779555632706
+    },
+    "4": {
+        "imbalance_base_mean": 1.7699934161644593,
+        "imbalance_base_std": 0.024581285916957796,
+        "balance_base_mean": 1.6826381834520578,
+        "balance_base_std": 0.038352130848321835,
+        "balance_augment_mean": 1.7586796953710535,
+        "balance_augment_std": 0.047961202574514465
+    },
+    "5": {
+        "imbalance_base_mean": 1.8966589522307458,
+        "imbalance_base_std": 0.028187161884985847,
+        "balance_base_mean": 1.8071426933971897,
+        "balance_base_std": 0.02873981187917702,
+        "balance_augment_mean": 1.8826813945038015,
+        "balance_augment_std": 0.03541071634378244
+    },
+    "6": {
+        "imbalance_base_mean": 2.0233169022509765,
+        "imbalance_base_std": 0.01983833133429203,
+        "balance_base_mean": 1.9211742030247385,
+        "balance_base_std": 0.03178582499113071,
+        "balance_augment_mean": 1.987862102686154,
+        "balance_augment_std": 0.03247921963708348
+    },
+    "7": {
+        "imbalance_base_mean": 2.106017012680121,
+        "imbalance_base_std": 0.0205481889584323,
+        "balance_base_mean": 2.019286109846393,
+        "balance_base_std": 0.016135682643348855,
+        "balance_augment_mean": 2.0769508910936656,
+        "balance_augment_std": 0.04389965561160088
+    },
+    "8": {
+        "imbalance_base_mean": 2.1962425085386186,
+        "imbalance_base_std": 0.024859640817467634,
+        "balance_base_mean": 2.10018935863165,
+        "balance_base_std": 0.019212175757353813,
+        "balance_augment_mean": 2.1625822406286646,
+        "balance_augment_std": 0.01710567911588332
+    },
+    "9": {
+        "imbalance_base_mean": 2.2739250343096264,
+        "imbalance_base_std": 0.017659717106089323,
+        "balance_base_mean": 2.182592340401739,
+        "balance_base_std": 0.0173054826515677,
+        "balance_augment_mean": 2.239054248711227,
+        "balance_augment_std": 0.01044832112611832
+    }
+}

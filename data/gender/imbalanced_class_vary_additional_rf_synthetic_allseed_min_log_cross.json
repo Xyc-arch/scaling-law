@@ -1,0 +1,45 @@
+{
+    "0": {
+        "balance_augment_mean": -2.030198399461222,
+        "balance_augment_std": 0.2186943646172864
+    },
+    "1": {
+        "balance_augment_mean": -1.9676959584022895,
+        "balance_augment_std": 0.11551103079061889
+    },
+    "2": {
+        "balance_augment_mean": -2.1023901211477303,
+        "balance_augment_std": 0.33233297267895695
+    },
+    "3": {
+        "balance_augment_mean": -2.121431447752568,
+        "balance_augment_std": 0.32084735903683387
+    },
+    "4": {
+        "balance_augment_mean": -1.997475115071912,
+        "balance_augment_std": 0.15296304299862973
+    },
+    "5": {
+        "balance_augment_mean": -1.9477406896137137,
+        "balance_augment_std": 0.14638551347375497
+    },
+    "6": {
+        "balance_augment_mean": -1.9845366924373136,
+        "balance_augment_std": 0.23808220491551416
+    },
+    "7": {
+        "balance_augment_mean": -1.9690628303345608,
+        "balance_augment_std": 0.21073918257955607
+    },
+    "8": {
+        "balance_augment_mean": -1.891546317863693,
+        "balance_augment_std": 0.24036507908233865
+    },
+    "9": {
+        "balance_augment_mean": -2.1807236923091726,
+        "balance_augment_std": 0.25402201657439594
+    },
+    "10": {
+        "train_all_augment": -2.326810974022357
+    }
+}

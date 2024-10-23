@@ -1,8 +1,0 @@
-{
-    "seed_data_size": 200,
-    "train_data_size": 3020,
-    "train1_size": 1203,
-    "train0_size": 1817,
-    "pos_size": 1810,
-    "neg_size": 1210
-}
