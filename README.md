@@ -1,0 +1,1 @@
+The codebase is designed to evaluate the effectiveness of using LLM-generated synthetic data for oversampling, aiming to address class imbalance and mitigate spurious correlations. The scaling law for performance improvement with additional data follows a negative power relationship.
