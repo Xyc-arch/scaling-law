@@ -1,0 +1,66 @@
+{
+    "synthetic_seed": {
+        "xgb": {
+            "balanced_cross": {
+                "imbalance_base_mean": 2.347111979780448,
+                "imbalance_base_std": 0.024523929285820933,
+                "balance_base_mean": 1.5920761753713049,
+                "balance_base_std": 0.021982179826611006
+            },
+            "min_cross": {
+                "imbalance_base_mean": 4.654586150459221,
+                "imbalance_base_std": 0.05028624836326736,
+                "balance_base_mean": 2.926264448950773,
+                "balance_base_std": 0.046928748584273906
+            }
+        }
+    },
+    "smote": {
+        "xgb": {
+            "balanced_cross": {
+                "imbalance_base_mean": 2.347111979780448,
+                "imbalance_base_std": 0.024523929285820933,
+                "balance_base_mean": 2.266585468320357,
+                "balance_base_std": 0.010918480868950649
+            },
+            "min_cross": {
+                "imbalance_base_mean": 4.654586150459221,
+                "imbalance_base_std": 0.05028624836326736,
+                "balance_base_mean": 4.424004902960328,
+                "balance_base_std": 0.022692610730842687
+            }
+        }
+    },
+    "adasyn": {
+        "xgb": {
+            "balanced_cross": {
+                "imbalance_base_mean": 2.347111979780448,
+                "imbalance_base_std": 0.024523929285820933,
+                "balance_base_mean": 2.243348584425752,
+                "balance_base_std": 0.016660526897320994
+            },
+            "min_cross": {
+                "imbalance_base_mean": 4.654586150459221,
+                "imbalance_base_std": 0.05028624836326736,
+                "balance_base_mean": 4.379455447735461,
+                "balance_base_std": 0.031587835331639405
+            }
+        }
+    },
+    "ros": {
+        "xgb": {
+            "balanced_cross": {
+                "imbalance_base_mean": 2.347111979780448,
+                "imbalance_base_std": 0.024523929285820933,
+                "balance_base_mean": 2.268791580389707,
+                "balance_base_std": 0.01858524344316706
+            },
+            "min_cross": {
+                "imbalance_base_mean": 4.654586150459221,
+                "imbalance_base_std": 0.05028624836326736,
+                "balance_base_mean": 4.46740301228026,
+                "balance_base_std": 0.03886234502561094
+            }
+        }
+    }
+}

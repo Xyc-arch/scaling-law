@@ -1,0 +1,6 @@
+{
+    "train1_size": 2032,
+    "train0_size": 1968,
+    "pos_size": 2066,
+    "neg_size": 1934
+}

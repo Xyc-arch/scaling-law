@@ -1,0 +1,6 @@
+{
+    "train1_size": 2014,
+    "train0_size": 1986,
+    "pos_size": 2375,
+    "neg_size": 1625
+}

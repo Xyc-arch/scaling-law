@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Env & system
+.env/
+.venv/
+.DS_Store
+.vscode/
+.idea/
+
+# Model weights
+*.pt
+*.pth
+*.bin
+*.ckpt
+
+# Ignore all CSVs
+*.csv
+
+# Keep all JSONs
+!*.json
