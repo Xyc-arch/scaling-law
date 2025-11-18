@@ -22,9 +22,11 @@ SAVE_DIR = "/home/ubuntu/scaling-law/plots/ablate"
 
 os.makedirs(SAVE_DIR, exist_ok=True)
 
-BASELINES = ["synthetic_seed", "smote", "adasyn", "ros"]
-LABELS = ["LLM", "SMOTE", "ADASYN", "ROS"]
-COLORS = ["#2ca02c", "#1f77b4", "#ff7f0e", "#d62728"]  # green, blue, orange, red
+# ---- add LLM-Ind as a new method (minimal change) ----
+BASELINES = ["synthetic_seed", "synthetic_seed_ind", "smote", "adasyn", "ros"]
+LABELS   = ["LLM",            "LLM-Ind",           "SMOTE", "ADASYN", "ROS"]
+COLORS   = ["#2ca02c", "#9467bd", "#1f77b4", "#ff7f0e", "#d62728"]
+# green, purple, blue, orange, red
 
 
 # ====================================================
@@ -43,7 +45,10 @@ def plot_ablate(dataset, ablation, data_dict):
         balance_means = []
         balance_stds = []
 
-        for base in BASELINES:
+        used_labels = []
+        used_colors = []
+
+        for base, label, color in zip(BASELINES, LABELS, COLORS):
             if base not in data_dict:
                 continue
             sub = data_dict[base]["xgb"][metric]
@@ -51,14 +56,22 @@ def plot_ablate(dataset, ablation, data_dict):
             imbalance_base_stds.append(sub["imbalance_base_std"])
             balance_means.append(sub["balance_base_mean"])
             balance_stds.append(sub["balance_base_std"])
+            used_labels.append(label)
+            used_colors.append(color)
+
+        if len(balance_means) == 0:
+            print(f"⚠️ No data for {dataset}, {ablation}, {metric}")
+            plt.close()
+            continue
 
         # --- positions ---
-        x = np.arange(len(BASELINES) + 1)  # +1 for baseline
+        x = np.arange(len(used_labels) + 1)  # +1 for baseline
         width = 0.6
 
         # --- gray baseline bar ---
-        base_mean = imbalance_base_means[0] if imbalance_base_means else 0
-        base_std = imbalance_base_stds[0] if imbalance_base_stds else 0
+        # use the first method's imbalance baseline as the "Base" value
+        base_mean = imbalance_base_means[0]
+        base_std = imbalance_base_stds[0]
 
         plt.bar(
             0,
@@ -71,7 +84,7 @@ def plot_ablate(dataset, ablation, data_dict):
         )
 
         # --- colored bars for each method ---
-        for i, (mean, std, color) in enumerate(zip(balance_means, balance_stds, COLORS)):
+        for i, (mean, std, color) in enumerate(zip(balance_means, balance_stds, used_colors)):
             plt.bar(
                 i + 1,
                 mean,
@@ -82,7 +95,7 @@ def plot_ablate(dataset, ablation, data_dict):
             )
 
         # --- labels and style ---
-        xtick_labels = ["Base"] + LABELS
+        xtick_labels = ["Base"] + used_labels
         plt.xticks(np.arange(len(xtick_labels)), xtick_labels, fontsize=15)
         plt.ylabel(metric.replace("_", " ") + " loss", fontsize=16)
         plt.yticks(fontsize=14)
@@ -106,15 +119,26 @@ def main():
 
     for dataset in DATASETS:
         for ablation in ABLATION_TYPES:
-            filename = f"{dataset}_ablate_{ablation}.json"
-            result_path = os.path.join(RESULTS_DIR, filename)
+            base_filename = f"{dataset}_ablate_{ablation}.json"
+            base_path = os.path.join(RESULTS_DIR, base_filename)
 
-            if not os.path.exists(result_path):
-                print(f"⚠️ Missing file: {result_path}")
+            if not os.path.exists(base_path):
+                print(f"⚠️ Missing file: {base_path}")
                 continue
 
-            with open(result_path, "r") as f:
+            with open(base_path, "r") as f:
                 data = json.load(f)
+
+            # ---- minimal change: also load *_ind.json and merge ----
+            ind_filename = f"{dataset}_ablate_{ablation}_ind.json"
+            ind_path = os.path.join(RESULTS_DIR, ind_filename)
+            if os.path.exists(ind_path):
+                with open(ind_path, "r") as f_ind:
+                    ind_data = json.load(f_ind)
+                # this adds the "synthetic_seed_ind" entry
+                data.update(ind_data)
+            else:
+                print(f"⚠️ IND file not found (skipping LLM-Ind for this setting): {ind_path}")
 
             plot_ablate(dataset, ablation, data)
 

@@ -1,0 +1,18 @@
+{
+    "synthetic_seed_ind": {
+        "xgb": {
+            "balanced_cross": {
+                "imbalance_base_mean": 0.9087033182271235,
+                "imbalance_base_std": 0.021339823639321145,
+                "balance_base_mean": 0.5949158564758223,
+                "balance_base_std": 0.013162069446549067
+            },
+            "min_cross": {
+                "imbalance_base_mean": 2.260706487561321,
+                "imbalance_base_std": 0.07499273513752623,
+                "balance_base_mean": 0.5005548686134313,
+                "balance_base_std": 0.0395819332002701
+            }
+        }
+    }
+}
