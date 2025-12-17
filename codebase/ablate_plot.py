@@ -24,7 +24,7 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 
 # ---- add LLM-Ind as a new method (minimal change) ----
 BASELINES = ["synthetic_seed", "synthetic_seed_ind", "smote", "adasyn", "ros"]
-LABELS   = ["LLM",            "LLM-Ind",           "SMOTE", "ADASYN", "ROS"]
+LABELS   = ["LLM-s",            "LLM-i",           "SMOTE", "ADASYN", "ROS"]
 COLORS   = ["#2ca02c", "#9467bd", "#1f77b4", "#ff7f0e", "#d62728"]
 # green, purple, blue, orange, red
 
@@ -95,7 +95,7 @@ def plot_ablate(dataset, ablation, data_dict):
             )
 
         # --- labels and style ---
-        xtick_labels = ["Base"] + used_labels
+        xtick_labels = ["RAW"] + used_labels
         plt.xticks(np.arange(len(xtick_labels)), xtick_labels, fontsize=15)
         plt.ylabel(metric.replace("_", " ") + " loss", fontsize=16)
         plt.yticks(fontsize=14)
