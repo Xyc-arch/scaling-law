@@ -1,0 +1,226 @@
+import pandas as pd
+import numpy as np
+import os
+import json
+from sklearn.metrics import balanced_accuracy_score, accuracy_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from catboost import CatBoostClassifier
+from xgboost import XGBClassifier
+from utils import *
+
+
+
+def divide_test_data(test_data, spurious_column, spurious_small_is_0, label_column='Target'):
+    """
+    Divide a test dataset into label-spurious groups.
+
+    Parameters
+    ----------
+    test_data : pandas.DataFrame
+        Test dataset containing the label and spurious attribute columns.
+    spurious_column : str
+        Name of the spurious attribute column.
+    spurious_small_is_0 : int
+        Indicator for how to define the smaller spurious value. If 1, the smaller value is set to 0;
+        otherwise, the minimum observed value of the spurious column is used.
+    label_column : str, optional
+        Name of the binary label column. Default is 'Target'.
+
+    Returns
+    -------
+    dict
+        Dictionary mapping group labels '00', '01', '10', and '11' to their corresponding test subsets.
+        Empty dataframes are inserted for missing groups.
+    """
+    if spurious_small_is_0 == 1:
+        small_value = 0
+    else:
+        small_value = test_data[spurious_column].min()
+    test_data['spurious_value'] = test_data[spurious_column].apply(lambda x: 0 if x == small_value else 1)
+    test_data['group'] = test_data['spurious_value'].astype(str) + test_data[label_column].astype(int).astype(str)
+    
+    # Create groups
+    groups = {grp: df for grp, df in test_data.groupby('group')}
+
+    # Ensure all groups are present and drop 'spurious_value' and 'group'
+    for grp in ['00', '01', '10', '11']:
+        if grp not in groups:
+            groups[grp] = pd.DataFrame(columns=test_data.columns)
+        else:
+            groups[grp] = groups[grp].drop(columns=['spurious_value', 'group'])
+    
+    return groups
+
+
+def perform_experiment(parent_path, seed_size, random_seed, classifier_type, spurious_column, spurious_small_is_0, target_column='Target', add_data="synthetic", metric="balanced", augment_w = 0.5):
+    """
+    Run spurious-correlation experiments while varying the imbalance ratio between spurious groups.
+
+    Parameters
+    ----------
+    parent_path : str
+        Directory containing seed, training, synthetic, and test CSV files, and where results are saved.
+    seed_size : int
+        Size of the balanced seed dataset used to determine sampling sizes.
+    random_seed : int
+        Random seed used for reproducible sampling.
+    classifier_type : str
+        Classifier identifier passed to ``get_classifier``.
+    spurious_column : str
+        Name of the spurious attribute column.
+    spurious_small_is_0 : int
+        Indicator for how to define the smaller spurious value. If 1, the smaller value is set to 0;
+        otherwise, the minimum observed value of the spurious column is used.
+    target_column : str, optional
+        Name of the binary label column. Default is 'Target'.
+    add_data : str, optional
+        Name of the synthetic or baseline augmentation method used to locate input files. Default is 'synthetic'.
+    metric : str, optional
+        Evaluation metric identifier passed to ``loss``. Default is 'balanced'.
+    augment_w : float, optional
+        Sample weight assigned to additional augmentation samples. Default is 0.5.
+
+    Returns
+    -------
+    None
+        Writes experiment results as a JSON file under ``parent_path``.
+    """
+    np.random.seed(random_seed)
+
+    exp_results_path = os.path.join(parent_path, f"spurious_corr_vary_ratio_{classifier_type}_{add_data}_{metric}.json")
+    seed_path = os.path.join(parent_path, "seed.csv")
+    train_neg_path = os.path.join(parent_path, "train_neg.csv")
+    synthetic_pos_path = os.path.join(parent_path, f"{add_data}_pos.csv")
+    synthetic_neg_path = os.path.join(parent_path, f"{add_data}_neg.csv")
+    test_path = os.path.join(parent_path, "test.csv")
+
+    seed_data = pd.read_csv(seed_path)
+    train_neg = pd.read_csv(train_neg_path)
+    synthetic_pos = pd.read_csv(synthetic_pos_path)
+    synthetic_neg = pd.read_csv(synthetic_neg_path)
+    test_data = pd.read_csv(test_path)
+
+    test_groups = divide_test_data(test_data.copy(), spurious_column, spurious_small_is_0, target_column)
+
+    train_neg_use = train_neg.sample(n=5 * seed_size, random_state=random_seed)
+    synthetic_pos_balance = synthetic_pos.sample(n=5 * seed_size, random_state=random_seed)
+    synthetic_pos_remain = synthetic_pos.drop(synthetic_pos_balance.index)
+
+    results = {}
+
+    for i in range(10):
+        print(i)
+        imbalance_base_scores = []
+        balance_base_scores = []
+        balance_augment_scores = []
+
+        for seed in [1, 2, 6, 8, 42]:
+            np.random.seed(seed)
+
+            num_samples_seed = int(i * seed_size / 2)
+            num_samples_augment = 3 * seed_size
+
+            if num_samples_seed > 0:
+                train_neg_samples = train_neg_use.sample(n=num_samples_seed, random_state=seed)
+                imbalance_base = pd.concat([seed_data, train_neg_samples])
+            else:
+                imbalance_base = seed_data.copy()
+
+            X_train_imbalance = imbalance_base.drop(columns=[target_column])
+            y_train_imbalance = imbalance_base[target_column]
+
+            clf = get_classifier(classifier_type, seed)
+            clf.fit(X_train_imbalance, y_train_imbalance)
+            
+            imbalance_base_scores.append(loss(metric, test_data, test_groups, target_column, clf, "spurious"))
+
+            if num_samples_seed > 0:
+                synthetic_samples = synthetic_pos_balance.sample(n=num_samples_seed, random_state=seed)
+                balance_base = pd.concat([imbalance_base, synthetic_samples])
+            else:
+                balance_base = imbalance_base.copy()
+
+            X_train_balance = balance_base.drop(columns=[target_column])
+            y_train_balance = balance_base[target_column]
+
+            clf = get_classifier(classifier_type, seed)
+            clf.fit(X_train_balance, y_train_balance)
+
+            balance_base_scores.append(loss(metric, test_data, test_groups, target_column, clf, "spurious"))
+
+            if num_samples_augment > 0:
+                half_augment = int(num_samples_augment / 2)
+                augment_samples_pos = synthetic_pos_remain.sample(n=half_augment, random_state=seed)
+                augment_samples_neg = synthetic_neg.sample(n=half_augment, random_state=seed)
+                augment_samples = pd.concat([augment_samples_pos, augment_samples_neg], ignore_index=True)
+                balance_augment = pd.concat([balance_base, augment_samples])
+                sample_weights = np.concatenate([np.ones(len(balance_base)), np.full(len(augment_samples), augment_w)])
+            else:
+                balance_augment = balance_base.copy()
+                sample_weights = np.ones(len(balance_base))
+
+            X_train_augment = balance_augment.drop(columns=[target_column])
+            y_train_augment = balance_augment[target_column]
+
+            clf = get_classifier(classifier_type, seed)
+            clf.fit(X_train_augment, y_train_augment, sample_weight=sample_weights)
+            
+            balance_augment_scores.append(loss(metric, test_data, test_groups, target_column, clf, "spurious"))
+
+        results[i] = {
+            'imbalance_base_mean': np.mean(imbalance_base_scores),
+            'imbalance_base_std': np.std(imbalance_base_scores),
+            'balance_base_mean': np.mean(balance_base_scores),
+            'balance_base_std': np.std(balance_base_scores),
+            'balance_augment_mean': np.mean(balance_augment_scores),
+            'balance_augment_std': np.std(balance_augment_scores)
+        }
+
+    with open(exp_results_path, 'w') as f:
+        json.dump(results, f, indent=4)
+    
+
+
+if __name__ == "__main__":
+    
+    data_names = {0: "craft", 1: "gender", 2: "diabetes"}
+    
+    add_data_ls = {0: "synthetic_allseed", 1: "smote", 2: "adasyn", 3: "ros"}
+    
+    classifier_types = {0: "rf", 1: "xgb"}
+    
+    metrics = {0: "balanced_cross", 1: "min_cross"}
+    
+    metric = metrics[1]
+    
+    for idx_metric in [0, 1]:
+        metric = metrics[idx_metric]
+        for idx_data_name in [0, 1, 2]:
+            data_name = data_names[idx_data_name]
+            for idx_add_data in [0, 1, 2, 3]:
+                for idx_classifier in [0]:
+                    add_data = add_data_ls[idx_add_data]
+                    classifier_type = classifier_types[idx_classifier]
+                    
+                    info = load_data_info('data_info.json')
+                    data_info = info.get(data_name, {})
+                    seed_size = data_info.get('seed_size')
+                    label_col = data_info.get('label_col')
+                    spurious_col = data_info.get('spurious_col')
+                    spurious_small_is_0 = data_info.get('spurious_small_is_0')
+                    parent_path = data_info.get('path')
+
+                    
+                    
+                    perform_experiment(
+                        parent_path,
+                        seed_size,
+                        42,
+                        classifier_type,
+                        spurious_column=spurious_col,
+                        spurious_small_is_0=spurious_small_is_0,
+                        target_column=label_col,
+                        add_data=add_data,
+                        metric=metric
+                    )

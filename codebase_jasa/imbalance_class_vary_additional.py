@@ -1,0 +1,203 @@
+import pandas as pd
+import numpy as np
+import os
+import json
+from sklearn.metrics import balanced_accuracy_score, accuracy_score, log_loss
+from sklearn.utils.class_weight import compute_class_weight
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from catboost import CatBoostClassifier
+from xgboost import XGBClassifier
+from utils import *
+
+
+
+def divide_test_data(test_data, label_column='Target'):
+    """
+    Divide a test dataset into groups by binary label.
+
+    Parameters
+    ----------
+    test_data : pandas.DataFrame
+        Test dataset containing the label column.
+    label_column : str, optional
+        Name of the binary label column used for grouping. Default is 'Target'.
+
+    Returns
+    -------
+    dict
+        Dictionary mapping each label value, 0 and 1, to the corresponding subset of the test data.
+        Empty dataframes are inserted for missing label groups.
+    """
+    
+    groups = {grp: df for grp, df in test_data.groupby(test_data[label_column])}
+
+    for grp in [0, 1]:
+        if grp not in groups:
+            groups[grp] = pd.DataFrame(columns=test_data.columns)
+
+    return groups
+
+
+def perform_experiment(parent_path, seed_size, random_seed, classifier_type, target_column='Target', add_data="synthetic", metric="balanced", step = 1, augment_w = 0.5):
+    """
+    Run imbalanced-classification experiments while varying the amount of additional augmentation data.
+
+    Parameters
+    ----------
+    parent_path : str
+        Directory containing seed, training, synthetic, and test CSV files, and where results are saved.
+    seed_size : int
+        Size of the balanced seed dataset used to determine sampling sizes.
+    random_seed : int
+        Random seed used for reproducible sampling.
+    classifier_type : str
+        Classifier identifier passed to ``get_classifier``.
+    target_column : str, optional
+        Name of the binary label column. Default is 'Target'.
+    add_data : str, optional
+        Name of the synthetic or baseline augmentation method used to locate input files. Default is 'synthetic'.
+    metric : str, optional
+        Evaluation metric identifier passed to ``loss``. Default is 'balanced'.
+    step : int, optional
+        Multiplier controlling how quickly the amount of additional augmentation data increases. Default is 1.
+    augment_w : float, optional
+        Sample weight assigned to additional augmentation samples. Default is 0.5.
+
+    Returns
+    -------
+    None
+        Writes experiment results as a JSON file under ``parent_path``.
+    """
+    np.random.seed(random_seed)
+
+    exp_results_path = os.path.join(parent_path, f"imbalanced_class_vary_additional_{classifier_type}_{add_data}_{metric}.json")
+    print(exp_results_path)
+    seed_path = os.path.join(parent_path, "seed.csv")
+    train0_path = os.path.join(parent_path, "train0.csv")
+    train_all_path = os.path.join(parent_path, "train.csv")
+    synthetic1_path = os.path.join(parent_path, f"{add_data}1.csv")
+    synthetic0_path = os.path.join(parent_path, f"{add_data}0.csv")
+    test_path = os.path.join(parent_path, "test.csv")
+
+
+    seed_data = pd.read_csv(seed_path)
+    train0 = pd.read_csv(train0_path)
+    train_all = pd.read_csv(train_all_path)
+    synthetic1 = pd.read_csv(synthetic1_path)
+    synthetic0 = pd.read_csv(synthetic0_path)
+    test_data = pd.read_csv(test_path)
+
+    test_groups = divide_test_data(test_data.copy(), target_column)
+
+    train0_use = train0.sample(n=5 * seed_size, random_state=random_seed)
+    synthetic1_balance = synthetic1.sample(n=5 * seed_size, random_state=random_seed)
+    synthetic1_remain = synthetic1.drop(synthetic1_balance.index)
+    
+    num_samples_seed = 4*seed_size
+    train0_samples = train0_use.sample(n=num_samples_seed, random_state=random_seed)
+    imbalance_base = pd.concat([seed_data, train0_samples])
+
+    results = {}
+
+    for i in range(10):
+        print(i)
+        
+        balance_augment_scores = []
+        
+
+        for seed in [1, 2, 6, 8, 42]:
+            np.random.seed(seed)
+
+            num_samples_augment = i * seed_size * step
+
+            
+            if num_samples_seed > 0:
+                synthetic_samples = synthetic1_balance.sample(n=num_samples_seed, random_state=seed)
+                balance_base = pd.concat([imbalance_base, synthetic_samples])
+            else:
+                balance_base = imbalance_base.copy()
+
+
+            if num_samples_augment > 0:
+                half_augment = int(num_samples_augment / 2)
+                augment_samples_pos = synthetic1_remain.sample(n=half_augment, random_state=seed)
+                augment_samples_neg = synthetic0.sample(n=half_augment, random_state=seed)
+                augment_samples = pd.concat([augment_samples_pos, augment_samples_neg], ignore_index=True)
+                balance_augment = pd.concat([balance_base, augment_samples])
+                sample_weights = np.concatenate([np.ones(len(balance_base)), np.full(len(augment_samples), augment_w)])
+            else:
+                balance_augment = balance_base.copy()
+                sample_weights = np.ones(len(balance_base))
+
+            X_train_augment = balance_augment.drop(columns=[target_column])
+            y_train_augment = balance_augment[target_column]
+
+            clf = get_classifier(classifier_type, seed)
+            clf.fit(X_train_augment, y_train_augment, sample_weight=sample_weights)
+
+            balance_augment_scores.append(loss(metric, test_data, test_groups, target_column, clf, "imbalance"))
+            
+
+        results[i] = {
+            'balance_augment_mean': np.mean(balance_augment_scores),
+            'balance_augment_std': np.std(balance_augment_scores)
+        }
+        
+        
+    X_train_all = train_all.drop(columns=[target_column])
+    y_train_all = train_all[target_column]
+
+    clf = get_classifier(classifier_type, seed)
+    clf.fit(X_train_all, y_train_all)
+
+    train_all_score = loss(metric, test_data, test_groups, target_column, clf, "imbalance")
+        
+    results[i+1] = {
+        'train_all_augment': train_all_score
+    }
+
+    with open(exp_results_path, 'w') as f:
+        json.dump(results, f, indent=4)
+    
+    
+
+if __name__ == "__main__":
+    
+    data_names = {0: "craft", 1: "gender", 2: "diabetes", 3: "adult"}
+    
+    add_data_ls = {0: "synthetic_allseed", 1: "smote", 2: "adasyn", 3: "ros"}
+    
+    classifier_types = {0: "rf", 1: "xgb"}
+    
+    metrics = {0: "balanced_log_cross", 1: "min_log_cross"}
+    
+    idx_add_data = 0
+    
+    
+    for idx_metric in [1]:
+        metric = metrics[idx_metric]
+        for idx_data_name in [0, 1, 2, 3]:
+            data_name = data_names[idx_data_name]
+            for idx_classifier in [0]:
+                add_data = add_data_ls[idx_add_data]
+                classifier_type = classifier_types[idx_classifier]
+                
+                info = load_data_info('data_info.json')
+                data_info = info.get(data_name, {})
+                seed_size = data_info.get('seed_size')
+                label_col = data_info.get('label_col')
+                parent_path = data_info.get('path')
+
+                
+                
+                perform_experiment(
+                    parent_path,
+                    seed_size,
+                    42,
+                    classifier_type,
+                    target_column=label_col,
+                    add_data=add_data,
+                    metric=metric,
+                    step=2
+                )
